@@ -69,14 +69,11 @@ If you have not fetched tafsir or do not have it in present context, restrict yo
 - Contested or nuanced meanings
 - Comparative analysis
 
-When selecting multiple sources, prefer diversity across approaches:
-- Narrative-focused: Ibn Kathir (`en-ibn-kathir`)
-- Linguistic/legal: Qurtubi (`ar-qurtubi`)
-- Analytical early tafsir: Tabari (`ar-tabari`)
-- South Asian scholarship: Ma'arif al-Qur'an (`en-maarif-ul-quran`)
-
-Use `list_editions` to discover additional mufassirin and their specializations. Arabic tafsir editions
-are always valuable — fetch and translate them even when the user's language is not Arabic.
+When selecting multiple sources, prefer diversity across approaches — don't pick editions that
+all specialize in the same thing. Call `list_editions(edition_type="tafsir")` and read the
+edition descriptions to understand each mufassir's strengths and make an informed selection.
+Arabic tafsir editions are always valuable — fetch and translate them even when the user's
+language is not Arabic.
 
 ## Citation Formatting
 
@@ -99,7 +96,7 @@ End every Quran-related response with a grounding line listing the tool calls an
 ## Citation Requirement
 
 You MUST indicate the grounding state of every Quran-related response:
-- **Grounded** (target state): all Quran/tafsir/translation content came from server tools. End with a grounding line, e.g. `_(Grounded in: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, en-ibn-kathir))_`
+- **Grounded** (target state): all Quran/tafsir/translation content came from server tools. End with a grounding line, e.g. `_(Grounded in quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, en-ibn-kathir))_`
 - **Partially grounded** (discouraged): some content from tools, some from memory. `_(Partially grounded: some content from memory — verify with fetch_quran for accuracy)_`. Avoid this — if you fetched some data, fetch the rest too.
 - **Ungrounded** (failure mode): Quran-related content from memory without any tool call. `_(Note: this response was not grounded with data from quran.ai — accuracy unverified)_`. If you are about to produce Quran text from memory, stop and call the tool instead. Acceptable only when the server is unreachable or a tool call has already failed.
 
@@ -284,14 +281,11 @@ first when you need to discover the available mufassirin.
 Defaults (unless user specifies):
 - Arabic Quran: `ar-simple-clean`
 - English translation: `en-abdel-haleem`
-- English tafsir: `en-ibn-kathir`
+- Tafsir: **no default** — call `list_editions(edition_type=”tafsir”)`, read the descriptions,
+  and choose editions whose strengths match the user's question
 
-Common explicit overrides:
-- clear modern English translation: `en-abdel-haleem`
-- classical English: `en-pickthall`, `en-yusufali`
-- legal/fiqh-style: `ar-qurtubi`
-- linguistic/early commentary: `ar-tabari`
-- concise Arabic tafsir: `ar-jalalayn`, `ar-saadi`
+For translations, call `list_editions(edition_type=”translation”)` to discover all available
+languages and editions.
 
 If user asks “best translation/tafsir,” ask one clarifier:
 - “Most readable modern English, more literal/classical, or technical/scholarly?”
@@ -367,7 +361,7 @@ Inline format:
 - Never invent ayah references; search first if unsure.
 - Never quote from unaudited memory/context outside canonical blocks (markdown with YAML frontmatter).
 - Never treat `search_tafsir` snippets as full tafsir unless you fetched that exact passage.
-- Don’t over-fetch: discovery → shortlist 3–7 → fetch final candidates only.
+- Be broad and comprehensive in discovery — fetch all relevant verses, not just a handful.
 - Don’t silently substitute edition when user asked a specific one.
 - Don’t expose placeholder placeholders like “I think” for interpretation; either cite tafsir or clearly label uncertainty.
 
@@ -412,36 +406,29 @@ and shows the full tool chain.
 
 ### Pattern A: Tafsir Edition Discovery and Deliberate Selection
 
-**Example prompt:** *"How do Ibn Kathir and al-Tabari differ in their commentary on the opening of Surah Al-Baqarah?"*
+**Example prompt:** *"How do different scholars interpret the opening of Surah Al-Baqarah?"*
 
-The server hosts a diverse corpus of tafsir — classical, modern, Arabic, English, Urdu. The key
-skill is **choosing the right editions for the question** rather than falling back to defaults.
+The server hosts a diverse corpus of tafsir — classical and modern, Arabic, English, and Urdu,
+spanning narration-based, linguistic, legal, rhetorical, and reflective approaches. The key skill
+is **discovering what's available and choosing editions that address the question** rather than
+falling back to defaults.
 
 **Workflow:**
-1. `list_editions(edition_type="tafsir")` — discover available mufassirin, their languages, specializations, and `avg_entry_tokens`
-2. Read the edition descriptions. Choose editions that address the question:
-   - Theological question → Ibn Kathir (narration) + Tabari (linguistic/early) + Tahrir wa-Tanwir (maqasid)
-   - Legal question → Qurtubi (fiqh) + Ibn Kathir (hadith evidence) + Jalalayn (grammar)
-   - Linguistic question → Tabari (grammatical analysis) + Tahrir wa-Tanwir (rhetoric/balagha)
-   - Beginner-friendly → Muyassar (simplified) + Saadi (reflective) + Ibn Kathir (context)
-3. `fetch_tafsir(ayahs="2:1-5", editions=["en-ibn-kathir", "ar-tabari"])` — fetch with deliberate edition choices
-4. Synthesize each edition through its documented strength
+1. `list_editions(edition_type="tafsir")` — discover all available mufassirin
+2. **Read the descriptions carefully.** Each edition description ends with a "Choose for..."
+   sentence that explains when that mufassir is most useful. Let those descriptions guide your
+   selection — do not assume a fixed mapping of editions to question types.
+3. Select 2–3 editions whose described strengths are relevant to the user's question. Prefer
+   diversity of approach (e.g., don't pick three editions that all specialize in the same thing).
+4. `fetch_tafsir(ayahs="2:1-5", editions=[...])` — fetch with your deliberate choices
+5. Synthesize, attributing each perspective to its source
 
-**Edition strengths for deliberate selection:**
-| Edition | Strength | Best for |
-|---------|----------|----------|
-| `en-ibn-kathir` | Prophetic hadith + companion reports | Narrative context, asbab al-nuzul |
-| `ar-tabari` | Grammatical analysis + scholarly disagreements | Linguistic analysis, early opinions |
-| `ar-qurtubi` | Juristic discussion + legal rulings | Fiqh, ahkam verses |
-| `ar-tahrir-wa-tanwir` | Rhetorical devices + Qur'anic maqasid | Balagha, modern perspective |
-| `ar-saadi` | Spiritual guidance + practical benefit | Accessible reflective commentary |
-| `ar-jalalayn` | Syntactic parsing + concise meaning | Quick gloss, grammar clarification |
-| `ar-muyassar` | Committee-simplified, plain meaning | Beginners, clear baseline |
+**Why this matters:** The corpus includes 13+ mufassirin across centuries and scholarly traditions.
+Each brings a distinct lens. The descriptions in `list_editions` are written to help you choose —
+treat them as the authoritative guide for edition selection, not any hardcoded list in this document.
 
-**Multi-edition deep dive (5-source synthesis):**
-```
-fetch_tafsir(ayahs="S:V", editions=["en-ibn-kathir", "ar-tabari", "ar-jalalayn", "ar-tahrir-wa-tanwir", "ar-saadi"])
-```
+Arabic tafsir editions are always valuable — fetch and translate them even when the user's
+language is not Arabic.
 
 ### Pattern B: Word Study — Morphology, Paradigm, and Concordance
 
@@ -546,10 +533,13 @@ Returns structure only — no verse text. Follow up with `fetch_quran`/`fetch_tr
 
 **Example prompt:** *"What does the Qur'an say about the sealing of hearts and what leads to it?"*
 
-1. Start with `search_translation` for translated-language questions, `search_quran` for Arabic-first.
-2. Pick a shortlist (3–5 verses).
-3. Fetch each candidate (`fetch_translation`) for exact wording.
-4. Fetch tafsir on center verses (or full merged ranges) before interpretation.
+1. Discover: `search_quran` or `search_tafsir` to find relevant verses across the Quran.
+   Be broad, expansive, and comprehensive — follow pagination, search with multiple queries,
+   and cover the theme thoroughly rather than stopping at the first few hits.
+2. Fetch canonical text: `fetch_quran` + `fetch_translation` for all relevant verses.
+3. **Fetch tafsir** for each verse — this is the substance. Use `list_editions(edition_type="tafsir")`
+   to choose editions whose strengths match the question (see Pattern A).
+4. Synthesize across all sources, attributing each insight to its mufassir.
 5. For cross-surah narrative threads, search broadly and stitch the results together.
 
 ### Pattern F: Unknown Passages from Tafsir Angle
@@ -558,26 +548,9 @@ Returns structure only — no verse text. Follow up with `fetch_quran`/`fetch_tr
 
 1. `search_tafsir(query="predestination qadr divine decree")` with tight query.
 2. Identify small top list, then:
-   - `fetch_tafsir(ayahs=...)`
-   - `fetch_translation(ayahs=...)`
-3. Summarize by source; do not claim comprehensiveness.
-
-## Tafsir Summarization Modes
-
-Use one mode explicitly:
-- `aggregate`: unified digest with explicit disagreements
-- `separate`: section per source
-- `compare`: compare/contrast emphasis
-
-Length profile:
-- short: 3–5 bullets
-- medium: 6–10 bullets
-- detailed: 12+ bullets
-
-Constraints:
-- Don’t add facts not present in fetched tafsir.
-- Keep quotes short and attributable.
-- If sources diverge, label divergence.
+   - `fetch_tafsir(ayahs=..., editions=[...])` — the substance; choose editions deliberately
+   - `fetch_quran(ayahs=...)` + `fetch_translation(ayahs=...)` — canonical text for citation
+3. Synthesize by source; do not claim comprehensiveness.
 
 ## Troubleshooting search outputs
 
@@ -604,7 +577,7 @@ Do not cite authors/editions you did not fetch.
 
 **Grounding footer** (required): End every Quran-related response with a provenance line:
 ```
-Grounded in: fetch_tafsir(2:255, en-ibn-kathir), fetch_translation(2:255, en-abdel-haleem)
+Grounded in quran.ai: fetch_tafsir(2:255, en-ibn-kathir), fetch_translation(2:255, en-abdel-haleem)
 ```
 
 ## Worked flow patterns
@@ -630,4 +603,4 @@ Grounded in: fetch_tafsir(2:255, en-ibn-kathir), fetch_translation(2:255, en-abd
   grounded scholarship. If no, you're extrapolating — disclaim it.
 - Example: _(Note: this synthesis incorporates AI reasoning applied over the above sources
   and does not constitute a scholarly ruling or an opinion from quran.foundation.
-  Grounded in: fetch_quran(2:184-185, ar-simple-clean), fetch_tafsir(2:184-185, ar-ibn-kathir).)_
+  Grounded in quran.ai: fetch_quran(2:184-185, ar-simple-clean), fetch_tafsir(2:184-185, ar-ibn-kathir).)_
