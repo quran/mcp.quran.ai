@@ -75,17 +75,34 @@ edition descriptions to understand each mufassir's strengths and make an informe
 Arabic tafsir editions are always valuable — fetch and translate them even when the user's
 language is not Arabic.
 
+## Tafsir Selection Gate
+
+Before calling `fetch_tafsir`, one of these MUST be true:
+1. The user named a specific mufassir or edition → use it
+2. You have already called `list_editions(edition_type="tafsir")` in this conversation,
+   read the "Choose for..." descriptions, and can state why each selected edition
+   fits the user's question
+
+If neither is true, call `list_editions` first. Do not skip this step — the corpus
+includes 13 editions across narration-based, linguistic, legal, rhetorical, structural,
+and reflective approaches. Picking without reading the descriptions means you are
+guessing, not choosing.
+
+Selection rationale template (state briefly before synthesis):
+> "Selected {edition_name} because its description emphasizes {strength} relevant
+> to the user's question about {topic}."
+
 ## Citation Formatting
 
 When presenting tafsir or grounded content, clearly separate canonical text from your synthesis:
 
 **Per-source attribution** — attribute each quoted passage to its edition:
 
-> **Ibn Kathir** (`en-ibn-kathir`):
+> **{Mufassir Name}** (`{edition-id}`):
 > [quoted tafsir text]
 >
-> **Al-Qurtubi** (`ar-qurtubi`):
-> [quoted tafsir text, translated]
+> **{Mufassir Name}** (`{edition-id}`):
+> [quoted tafsir text, translated if Arabic]
 >
 > **Synthesis**:
 > [your summary drawing on the above sources]
@@ -96,7 +113,7 @@ End every Quran-related response with a grounding line listing the tool calls an
 ## Citation Requirement
 
 You MUST indicate the grounding state of every Quran-related response:
-- **Grounded** (target state): all Quran/tafsir/translation content came from server tools. End with a grounding line, e.g. `_(Grounded in quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, en-ibn-kathir))_`
+- **Grounded** (target state): all Quran/tafsir/translation content came from server tools. End with a grounding line, e.g. `_(Grounded in quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(S:V, {tafsir-edition-id}))_`
 - **Partially grounded** (discouraged): some content from tools, some from memory. `_(Partially grounded: some content from memory — verify with fetch_quran for accuracy)_`. Avoid this — if you fetched some data, fetch the rest too.
 - **Ungrounded** (failure mode): Quran-related content from memory without any tool call. `_(Note: this response was not grounded with data from quran.ai — accuracy unverified)_`. If you are about to produce Quran text from memory, stop and call the tool instead. Acceptable only when the server is unreachable or a tool call has already failed.
 
@@ -105,7 +122,7 @@ You MUST indicate the grounding state of every Quran-related response:
 ## Attribution Rule
 
 Attribute claims to the fetched source — do not speak in your own voice for interpretations:
-- **Good**: "According to Ibn Kathir's tafsir…", "In Abdel Haleem's translation…", "The retrieved sources describe…"
+- **Good**: "According to {mufassir name}'s tafsir…", "In {translator name}'s translation…", "The retrieved sources describe…"
 - **Bad**: "Islam says…", "The correct ruling is…", "It is definitely haram/halal…"
 
 If reconciling multiple sources beyond what they explicitly state, mark it: "This is my synthesis based on the retrieved material, not a direct sourced quotation."
@@ -140,7 +157,7 @@ source: mushaf-viewer
 ayahs: "2:255"
 quran_edition: ar-simple-clean
 translation_edition: en-abdel-haleem
-tafsir_editions: en-ibn-kathir, en-maarif-ul-quran
+tafsir_editions: {tafsir-edition-1}, {tafsir-edition-2}
 ---
 
 # CANONICAL TEXT
@@ -154,10 +171,10 @@ tafsir_editions: en-ibn-kathir, en-maarif-ul-quran
 "God: there is no god but Him, the Ever Living, the Ever Watchful. Neither slumber nor sleep overtakes Him. All that is in the heavens and in the earth belongs to Him. Who is there that can intercede with Him except by His leave? He knows what is before them and what is behind them, but they do not comprehend any of His knowledge except what He wills. His throne extends over the heavens and the earth; it does not weary Him to preserve them both. He is the Most High, the Tremendous."
 
 ## Tafsir
-### Ibn Kathir (en-ibn-kathir), ayah 2:255
+### {Mufassir A} ({tafsir-edition-1}), ayah 2:255
 ... tafsir text ...
 
-### Ma'arif al-Qur'an (en-maarif-ul-quran), ayah 2:255
+### {Mufassir B} ({tafsir-edition-2}), ayah 2:255
 ... tafsir text ...
 ```
 
@@ -353,8 +370,8 @@ Translation: “...”
 3. Tafsir summary (`fetch_tafsir`) with inline attribution
 
 Inline format:
-- “...” (Ibn Kathir, 2:255)
-- “...” (al-Tabari, 2:255)
+- “...” ({mufassir_name}, S:V)
+- “...” ({mufassir_name}, S:V)
 
 ## Guardrails (Do not do)
 
@@ -395,7 +412,9 @@ Inline format:
 `fetch_translation(ayahs="S:V", editions=["en-abdel-haleem", "en-sahih-international"])`
 
 ### 5) Compare tafsir
-`fetch_tafsir(ayahs="S:V", editions=["en-ibn-kathir", "ar-tabari"])`
+`list_editions(edition_type="tafsir")` → read descriptions → choose 2-3 editions
+with different methodological lenses (e.g., one narration-based + one linguistic/rhetorical)
+`fetch_tafsir(ayahs="S:V", editions=[<chosen_edition_1>, <chosen_edition_2>])`
 
 ---
 
@@ -426,6 +445,14 @@ falling back to defaults.
 **Why this matters:** The corpus includes 13+ mufassirin across centuries and scholarly traditions.
 Each brings a distinct lens. The descriptions in `list_editions` are written to help you choose —
 treat them as the authoritative guide for edition selection, not any hardcoded list in this document.
+
+**Example selection rationale:** "The user asked for a quick clarification of 2:1-5.
+From `list_editions`: Edition A averages 246 tokens/entry and is described as a concise
+word-level gloss. Edition B averages 252 tokens/entry with reflective commentary. Both fit
+the context budget. For a deeper dive, Edition C at 2825 tokens/entry provides the full
+range of early scholarly opinion but requires more context. Choosing A + B for brevity."
+
+This demonstrates choosing based on `avg_entry_tokens` and described strengths, not habit.
 
 Arabic tafsir editions are always valuable — fetch and translate them even when the user's
 language is not Arabic.
@@ -469,10 +496,11 @@ Qur'an exploits this with surgical precision. The `fetch_word_*` tools let you u
 
 5. **Tafsir** — fetch scholarly commentary that discusses the linguistic distinctions:
    ```
-   fetch_tafsir(ayahs="40:3", editions=["ar-tahrir-wa-tanwir", "ar-tabari"])
-   fetch_tafsir(ayahs="20:82", editions=["ar-tahrir-wa-tanwir", "ar-saadi"])
+   list_editions(edition_type="tafsir")  → choose editions that specialize in linguistic analysis
+   fetch_tafsir(ayahs="40:3", editions=[<linguistic_edition>, <narration_edition>])
+   fetch_tafsir(ayahs="20:82", editions=[<linguistic_edition>, <practical_edition>])
    ```
-   Choose editions that specialize in linguistic analysis (Tabari, Tahrir wa-Tanwir).
+   Choose editions that specialize in linguistic analysis (check descriptions via list_editions).
 
 **Key principle:** The morphology tools give you the *what* (root, pattern, frequency). The tafsir
 gives you the *why* (what scholars say about the distinction). Combine both for depth.
@@ -537,8 +565,10 @@ Returns structure only — no verse text. Follow up with `fetch_quran`/`fetch_tr
    Be broad, expansive, and comprehensive — follow pagination, search with multiple queries,
    and cover the theme thoroughly rather than stopping at the first few hits.
 2. Fetch canonical text: `fetch_quran` + `fetch_translation` for all relevant verses.
-3. **Fetch tafsir** for each verse — this is the substance. Use `list_editions(edition_type="tafsir")`
-   to choose editions whose strengths match the question (see Pattern A).
+3. **Choose tafsir deliberately**: `list_editions(edition_type="tafsir")` — read the
+   "Choose for..." descriptions. For thematic studies, prefer methodological diversity:
+   e.g., one narration-based, one linguistic, one practical/reflective. Don't repeat
+   the same set of mufassirin from your last answer.
 4. Synthesize across all sources, attributing each insight to its mufassir.
 5. For cross-surah narrative threads, search broadly and stitch the results together.
 
@@ -548,9 +578,73 @@ Returns structure only — no verse text. Follow up with `fetch_quran`/`fetch_tr
 
 1. `search_tafsir(query="predestination qadr divine decree")` with tight query.
 2. Identify small top list, then:
-   - `fetch_tafsir(ayahs=..., editions=[...])` — the substance; choose editions deliberately
+   - `list_editions(edition_type="tafsir")` → choose based on descriptions
+   - `fetch_tafsir(ayahs=..., editions=[<chosen>])` — the substance
    - `fetch_quran(ayahs=...)` + `fetch_translation(ayahs=...)` — canonical text for citation
 3. Synthesize by source; do not claim comprehensiveness.
+
+### Pattern G: Legal/Fiqh Analysis — Ahkam al-Qur'an
+
+**Example prompt:** *"Explain the rules of inheritance as laid out in the verses from Surah al-Nisa."*
+
+Legal questions demand legal tafsir. Call `list_editions(edition_type="tafsir")` and look for
+editions whose descriptions mention *ahkam*, *fiqh*, or *legal rulings*. The corpus includes
+editions with extended cross-madhhab juristic analysis — the descriptions will tell you which.
+
+**Workflow:**
+1. `list_editions(edition_type="tafsir")` — identify which editions specialize in legal rulings.
+   Look for "Choose for: fiqh questions" or similar in the descriptions.
+2. `search_quran("inheritance shares parents children", translations="en-sahih-international")`
+   — discover the relevant verses. For legal precision, a more literal translation is often
+   preferable to dynamic equivalence.
+3. `fetch_translation(ayahs="4:11-12,4:176", editions="en-sahih-international")`
+4. `fetch_tafsir(ayahs="4:11-12,4:176", editions=[<legal_edition>, <historical_edition>])`
+   — one edition for the legal analysis, another for the asbab al-nuzul and hadith context
+5. `show_mushaf(surah=4, ayah=11)` — visual page context if the user would benefit from it
+
+**Why deliberate selection matters:** A legal-specialist mufassir will enumerate inheritance
+fractions, map them to potential heirs, and present cross-madhhab positions. A historically-oriented
+mufassir provides the narrations behind the revelation. Together they cover the legal architecture
+and the human story. Using a linguistic or reflective tafsir here would miss the juristic depth
+the question demands.
+
+**Tip:** Also check for editions with Hanafi, Maliki, Shafi'i, or Hanbali legal perspectives
+described in their edition metadata — the corpus includes multiple legal angles in different languages.
+
+### Pattern H: Contextual Reading of Sensitive Passages
+
+**Example prompt:** *"What's the full context around the call to fight in the beginning of Surat al-Tawbah?"*
+
+Controversial or sensitive passages are almost always misunderstood because they are read as
+isolated verses. The key insight is **structural context** — how the passage functions as a
+whole document. Call `list_editions(edition_type="tafsir")` and look for editions that
+specialize in discourse structure, passage ordering, or inter-surah coherence.
+
+**Workflow:**
+1. `list_editions(edition_type="tafsir")` — find editions that specialize in passage structure
+   and historical context. Look for descriptions mentioning verse ordering, surah coherence,
+   or discourse structure.
+2. `fetch_quran(ayahs="9:1-14", editions="ar-simple-clean")` — fetch the FULL passage range,
+   not just the controversial verse. Context means the verses before and after.
+3. `fetch_translation(ayahs="9:1-14", editions="en-abdel-haleem")`
+4. `fetch_tafsir(ayahs="9:1-6", editions=[<structural_edition>, <historical_edition>])`
+   — a structural edition for coherence (how the declaration, exception, deadline, and asylum
+   provision form a legal document), a historical edition for narrations and scholarly
+   disagreements about specific terms
+5. `fetch_tafsir(ayahs="9:12-13", editions=[<historical_edition>, <linguistic_edition>])`
+   — a historical edition for the named figures, a linguistic edition for analysis of
+   why the Qur'an uses specific phrasing choices
+
+**Why structural tafsir matters here:** A structural mufassir can reveal that 9:1-14 is not a
+sequence of independent commands but a structured legal-diplomatic document — with a declaration
+(9:1), safe conduct period (9:2), exception for treaty-honoring parties (9:4), military
+instruction with cessation clause (9:5), asylum provision (9:6), indictment (9:7-10),
+reconciliation pathway (9:11), and justification naming specific grievances (9:12-13). No
+single verse makes sense without this structure.
+
+**Key principle:** For sensitive passages, always fetch the full surrounding context (not just
+the verse in question) and always include at least one structural or historically-oriented
+mufassir who can explain *why* the passage is organized the way it is.
 
 ## Troubleshooting search outputs
 
@@ -569,15 +663,15 @@ If results are off target:
 If multiple editions used, include:
 ```text
 Works Cited:
-- Abdel Haleem (en-abdel-haleem)
-- Ibn Kathir (en-ibn-kathir)
+- {Translation Author} ({translation-edition-id})
+- {Mufassir Name} ({tafsir-edition-id})
 ```
 
 Do not cite authors/editions you did not fetch.
 
 **Grounding footer** (required): End every Quran-related response with a provenance line:
 ```
-Grounded in quran.ai: fetch_tafsir(2:255, en-ibn-kathir), fetch_translation(2:255, en-abdel-haleem)
+Grounded in quran.ai: fetch_tafsir(S:V, {tafsir-edition-id}), fetch_translation(S:V, {translation-edition-id})
 ```
 
 ## Worked flow patterns
@@ -603,4 +697,4 @@ Grounded in quran.ai: fetch_tafsir(2:255, en-ibn-kathir), fetch_translation(2:25
   grounded scholarship. If no, you're extrapolating — disclaim it.
 - Example: _(Note: this synthesis incorporates AI reasoning applied over the above sources
   and does not constitute a scholarly ruling or an opinion from quran.foundation.
-  Grounded in quran.ai: fetch_quran(2:184-185, ar-simple-clean), fetch_tafsir(2:184-185, ar-ibn-kathir).)_
+  Grounded in quran.ai: fetch_quran(2:184-185, ar-simple-clean), fetch_tafsir(S:V, {tafsir-edition-id}).)_

@@ -64,7 +64,7 @@ The same applies to tafsir: if the user asks about a scholarly view or a concept
 Every Quran-related response must indicate its grounding state:
 
 - **Grounded** (target state): All content came from server tools. End with:
-  `_Grounded with quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, ar-tabari)_`
+  `_Grounded with quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, {tafsir-edition-id})_`
 
 - **Partially grounded** (avoid this): Some content from tools, some from memory.
   `_Partially grounded with canonical data from quran.ai: some content from memory — verify with fetch_quran for accuracy_`
