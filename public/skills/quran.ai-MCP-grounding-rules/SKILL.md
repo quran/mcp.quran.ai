@@ -5,6 +5,8 @@ description: |
   commentary are fetched from canonical sources rather than generated from AI memory. Covers citation
   requirements, attribution discipline, faithfulness to source material, and when to use tafsir versus
   translation.
+metadata:
+  mcp-server: quran.ai MCP
 ---
 
 # Grounding Rules for quran.ai MCP
