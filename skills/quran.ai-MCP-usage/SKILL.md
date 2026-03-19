@@ -1,5 +1,5 @@
 ---
-name: quran.ai MCP usage guide
+name: quran-usage-guide
 description: |
   Use when the user asks to quote an ayah/surah, translate a verse, explain meaning/context/tafsir,
   find verses about a theme, compare translations/tafsir, analyze Arabic word patterns, or view a

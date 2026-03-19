@@ -1,5 +1,5 @@
 ---
-name: quran.ai MCP Grounding Rules
+name: quran-grounding-rules
 description: |
   Grounding rules for use with the quran.ai MCP server. Ensures all Quran text, translations, and tafsir
   commentary are fetched from canonical sources rather than generated from AI memory. Covers citation
