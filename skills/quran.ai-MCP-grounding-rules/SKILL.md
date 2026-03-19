@@ -13,9 +13,7 @@ metadata:
 
 ## Why This Exists
 
-For Muslims, the Quran is the literal word of God. Misquoting it, fabricating verses, or inventing interpretations is not a minor inaccuracy — it is a violation of trust. Users install this server specifically because they do not trust AI to produce Quran content from memory. Every feature of this server exists to solve that problem: verified text, scholarly commentary, and canonical translations sourced from quran.com.
-
-When you have access to this server and choose to answer from memory instead, you are defeating the entire purpose of the tool the user installed. You are telling them "I know better than the scholars" when you don't.
+For Muslims, the Quran is the literal word of God. Misquoting it, fabricating verses, or inventing interpretations is not a minor inaccuracy — it is a violation of trust. Users install this server because they do not trust AI to produce Quran content from memory. Every feature of this server exists to solve that problem: verified text, scholarly commentary, and canonical translations sourced from quran.com. When you have access to this server and choose to answer from memory instead, you are defeating the purpose of the tool the user installed. You are telling them "I know better than the scholars" when you don't.
 
 ## The Core Rule: Canonical Or Nothing
 
@@ -34,12 +32,12 @@ This applies to:
 
 ## Don't Be Lazy With Tafsir
 
-The most common failure mode is answering a question about meaning, context, or interpretation using only the translation text — or worse, from memory. Translations are literal renderings; they are not explanations. If the user asks what a verse *means*, what it *teaches*, what scholars say, or what the context is, you need tafsir.
+The most common failure mode is answering a question about meaning, context, or interpretation using only the translation text — or worse, from memory. Translations are literal renderings; they are not explanations. If the user asks what a verse *means*, what it *teaches*, what scholars say, or what the context is — you need tafsir, not just translation.
 
 **Rules:**
 - If you make any interpretive claim — what a verse "means", "implies", "is about", "teaches", "refers to" — you MUST ground it in tafsir you fetched or already have in context.
-- If you have not fetched tafsir, restrict yourself to quoting the Arabic and/or translation with no added interpretive inference.
-- Do not limit yourself to the user's language. Arabic tafsir editions often contain richer scholarship. Fetch the best source regardless of language and translate it yourself.
+- If you have not fetched tafsir, restrict yourself to quoting the Arabic and/or translation with no added interpretive inference. "Restatement" means the translation's words only — no causes, implications, rulings, audiences, or cross-verse connections unless sourced in tafsir.
+- Do not limit yourself to the user's language. Arabic tafsir editions often contain richer scholarship. Fetch the best source regardless of language and translate it yourself, but label your rendering as a model translation, not a verbatim scholarly quote.
 - Before fetching tafsir, choose editions deliberately based on the question: legal/fiqh, hadith-based, linguistic/historical, rhetorical, reflective, or beginner-friendly. Call `list_editions(edition_type='tafsir')` if you have not chosen deliberately yet.
 
 **Multi-source tafsir is expected for:**
@@ -66,15 +64,15 @@ Every Quran-related response must indicate its grounding state:
 - **Grounded** (target state): All content came from server tools. End with:
   `_Grounded with quran.ai: fetch_quran(2:255, ar-simple-clean), fetch_tafsir(2:255, {tafsir-edition-id})_`
 
-- **Partially grounded** (avoid this): Some content from tools, some from memory.
-  `_Partially grounded with canonical data from quran.ai: some content from memory — verify with fetch_quran for accuracy_`
-  If you fetched some data, fetch the rest too. Don't leave gaps.
+- **Partially grounded** (avoid — fetch the rest instead): Some content from tools, some from memory.
+  `_Partially grounded with quran.ai: some content from memory — verify with fetch_quran for accuracy_`
+  If you fetched some data, fetch the rest too. Don't leave gaps. If you are about to produce a partially grounded response, stop and fetch the missing data.
 
-- **Ungrounded** (failure mode): Quran content from memory without any tool call.
-  `_Note: this response was *not grounded* with canonical text from quran.ai — accuracy unverified_`
-  If you catch yourself about to write this, stop — call the tool instead.
+- **Ungrounded** (failure mode — tool failure disclosure only): Quran content from memory without any tool call.
+  `_Note: this response was not grounded with canonical text from quran.ai — accuracy unverified_`
+  If you catch yourself about to write this, stop — call the tool instead. Acceptable only when the server is unreachable or a tool call has already failed.
 
-"Quran-related" means: Quran text (Arabic), translation of Quran text, or commentary/tafsir on Quran content. General Islamic knowledge or historical context that doesn't quote or interpret specific ayahs does not require a grounding label.
+"Quran-related" means: Quran text (Arabic), translation of Quran text, or commentary/tafsir on Quran content. General Islamic knowledge or historical context that doesn't quote or interpret specific ayahs does not require a grounding label — but ungrounded background claims must not be presented as Quranic interpretation or scholarly consensus.
 
 ## Attribution
 
@@ -86,6 +84,14 @@ Attribute claims to the fetched source. Do not speak in your own voice for inter
 Do not present interpretations as rulings or authoritative religious judgments. If reconciling multiple sources beyond what they explicitly state, mark it: "This is my synthesis based on the retrieved material, not a direct sourced quotation."
 
 Do not cite authors or editions you did not actually fetch.
+
+### When Sources Disagree
+
+If fetched tafsir sources differ on a point, present the disagreement as disagreement. Do not collapse multiple scholarly positions into a single "Islamic view" or harmonize them unless a fetched source explicitly indicates consensus. Name each position and attribute it to its source.
+
+### Absence of Evidence
+
+If search or fetch does not return support for a claim, say that no supporting canonical material was found. Do not infer support from tangentially related passages or stretch retrieved material to cover a question it doesn't address.
 
 ## Faithfulness Over Comfort
 
@@ -114,7 +120,7 @@ The user installed this tool because they want authentic, sourced Quran scholars
 
 When your answer requires reasoning beyond what the fetched text explicitly states — applying Quranic principles to a modern situation not discussed by the mufassirin — add:
 
-> _Note: this synthesis incorporates AI reasoning beyond what the fetched canonical text explicitly stated and does not constitute a scholarly ruling or opinion from quran.foundation, quran.com or quran.ai._
+> _Note: this synthesis incorporates AI reasoning beyond what the fetched canonical text explicitly stated and does not constitute a scholarly ruling or opinion from quran.ai, quran.com or quran.foundation._
 
 **The test:** could a reader find your conclusion stated in the fetched tafsir? If yes, it's grounded scholarship — no disclaimer needed. If no, you're extrapolating — disclaim it.
 
@@ -123,7 +129,7 @@ When your answer requires reasoning beyond what the fetched text explicitly stat
 
 This does NOT apply when the answer is directly derivable from the fetched text.
 
-## When to Fetch vs Use Context (Decision Rule)
+## When to Fetch vs Use Context
 
 Before calling a tool, check whether canonical data is already in your context. Canonical data may arrive via tool calls you already made, or via dynamic context blocks (markdown with YAML frontmatter containing `source`, `ayahs`, and edition keys) injected by MCP apps.
 
@@ -148,10 +154,10 @@ Before calling a tool, check whether canonical data is already in your context. 
 - **Never invent ayah references.** Search first if you're unsure of the verse.
 - **Never treat search snippets as full tafsir.** Search results are excerpts — fetch the full passage before interpreting.
 - **Don't silently substitute editions.** If the user asked for a specific translation or tafsir, use that one.
-- **Don't over-fetch.** Discover with search → shortlist 3-7 results → fetch final candidates only.
+- **Search broadly, fetch selectively.** Follow pagination and use multiple queries during discovery, but shortlist the best 3–7 results before fetching canonical text.
 - **Translations are not tafsir.** `fetch_translation` returns literal meaning. `fetch_tafsir` returns scholarly commentary. Know the difference and use the right one.
 - **Morphology from memory is unreliable.** Use `fetch_word_morphology` for root, lemma, and grammatical analysis rather than recalling it.
 
 ## Full Operational Guide
 
-For the complete guide including tool selection flowcharts, search/fetch patterns, edition strategy, tafsir sourcing discipline, response templates, and worked examples, call `fetch_skill_guide`.
+For the complete guide including tool contracts, decision trees, search/fetch patterns, edition strategy, tafsir sourcing discipline, and worked examples, call `fetch_skill_guide`.
